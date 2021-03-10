@@ -8,6 +8,12 @@
 import BUAdSDK
 import Flutter
 
+class Test {
+    deinit {
+        print("------------Test init -----------")
+    }
+}
+
 public final class PangleAdManager: NSObject {
     public static let shared = PangleAdManager()
     
@@ -20,6 +26,8 @@ public final class PangleAdManager: NSObject {
     private var fullscreenVideoAdCollection: [Any] = []
     
     private var taskList: [FLTTaskProtocol] = []
+    
+    private var expressRewardTask: NativeExpressRewardAdTask?
     
     fileprivate func execTask(_ task: FLTTaskProtocol, _ loadingType: LoadingType? = nil) -> (@escaping (Any) -> Void) -> Void {
         self.taskList.append(task)
@@ -81,6 +89,20 @@ public final class PangleAdManager: NSObject {
         var loadingType = LoadingType(rawValue: loadingTypeIndex)!
         
         if loadingType == .preload || loadingType == .normal {
+            
+            if isExpress, let expressRewardTask = self.expressRewardTask {
+                expressRewardTask.showAd {
+                    switch $0 {
+                    case let .failure(error):
+                        let e = error as NSError?
+                        result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
+                    case let .success(successed):
+                        result(["code": 0, "verify": successed])
+                    }
+                }
+                return
+            }
+            
             let success = self.showRewardedVideoAd(isExpress)({ object in
                 result(object)
             })
@@ -94,12 +116,24 @@ public final class PangleAdManager: NSObject {
         }
         
         if isExpress {
-            let task = FLTRewardedVideoExpressAdTask(args)
-            self.execTask(task, loadingType)({ data in
-                if loadingType == .normal || loadingType == .preload_only {
-                    result(data)
+            self.expressRewardTask = NativeExpressRewardAdTask(args: args, loadingType: loadingType) { data in
+                switch data {
+                case let .failure(error):
+                    let e = error as NSError?
+                    result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
+                case let .success(successed):
+                    result(["code": 0, "verify": successed])
                 }
-            })
+            }
+            self.expressRewardTask?.loadAdData()
+//            let task = FLTRewardedVideoExpressAdTask(args)
+//            let text = Test()
+//            self.execTask(task, loadingType)({ data in
+//                text
+//                if loadingType == .normal || loadingType == .preload_only {
+//                    result(data)
+//                }
+//            })
         } else {
             let task = FLTRewardedVideoAdTask(args)
             self.execTask(task, loadingType)({ data in
@@ -251,7 +285,7 @@ extension PangleAdManager {
                     ad.show(fromRootViewController: vc)
                 } else if obj is BUNativeExpressRewardedVideoAd {
                     let ad = obj as! BUNativeExpressRewardedVideoAd
-                    ad.didReceiveSuccess = { verify in
+                    ad.didReceiveSuccess = { [weak ad] verify in
                         self.rewardedVideoAdCollection.removeFirst()
                         result(["code": 0, "verify": verify])
                     }

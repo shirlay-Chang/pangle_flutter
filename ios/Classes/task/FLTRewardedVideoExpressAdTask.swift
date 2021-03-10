@@ -15,7 +15,7 @@ internal final class FLTRewardedVideoExpressAdTask: FLTTaskProtocol {
         self.manager = manager
     }
     
-    convenience init(_ args: [String: Any?]) {
+    init(_ args: [String: Any?]) {
         let slotId: String = args["slotId"] as! String
         let userId: String = args["userId"] as? String ?? ""
         let rewardName: String? = args["rewardName"] as? String
@@ -34,7 +34,7 @@ internal final class FLTRewardedVideoExpressAdTask: FLTTaskProtocol {
             model.extra = extra
         }
         let manager = BUNativeExpressRewardedVideoAd(slotID: slotId, rewardedVideoModel: model)
-        self.init(manager)
+        self.manager = manager
     }
     
     func execute(_ loadingType: LoadingType) -> (@escaping (FLTTaskProtocol, Any) -> Void) -> Void {
@@ -49,6 +49,7 @@ internal final class FLTRewardedVideoExpressAdTask: FLTTaskProtocol {
                })
             
             self.manager.delegate = delegate
+            self.manager.extraDelegate = delegate
             self.delegate = delegate
             
             self.manager.loadData()

@@ -28,7 +28,7 @@ internal final class FLTRewardedVideoExpressAd: NSObject, BUNativeExpressRewarde
     func nativeExpressRewardedVideoAdDidLoad(_ rewardedVideoAd: BUNativeExpressRewardedVideoAd) {
         let preload = self.loadingType == .preload || self.loadingType == .preload_only
         if preload {
-            rewardedVideoAd.extraDelegate = self
+//            rewardedVideoAd.extraDelegate = self
             /// 存入缓存
             PangleAdManager.shared.setRewardedVideoAd(rewardedVideoAd)
             /// 必须回调，否则task不能销毁，导致内存泄漏
@@ -83,6 +83,10 @@ internal final class FLTRewardedVideoExpressAd: NSObject, BUNativeExpressRewarde
     }
     
     func nativeExpressRewardedVideoAdDidPlayFinish(_ rewardedVideoAd: BUNativeExpressRewardedVideoAd, didFailWithError error: Error?) {}
+    
+    deinit {
+        print("--------------deinit-----------")
+    }
 }
 
 private var delegateKey = "nullptrx.github.io/delegate"
