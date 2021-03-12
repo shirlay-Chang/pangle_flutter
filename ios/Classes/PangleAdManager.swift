@@ -8,12 +8,6 @@
 import BUAdSDK
 import Flutter
 
-class Test {
-    deinit {
-        print("------------Test init -----------")
-    }
-}
-
 public final class PangleAdManager: NSObject {
     public static let shared = PangleAdManager()
     
