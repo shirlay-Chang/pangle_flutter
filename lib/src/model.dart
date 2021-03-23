@@ -1,4 +1,26 @@
-import 'package:flutter/cupertino.dart';
+/*
+ * Copyright (c) 2021 nullptrX
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+import 'dart:ui';
 
 /// 信息流响应信息
 ///
@@ -8,7 +30,7 @@ import 'package:flutter/cupertino.dart';
 /// [data] (string list) 用于展示信息流广告的键id
 class PangleAd {
   final int code;
-  final String message;
+  final String? message;
   final int count;
   final List<String> data;
 
@@ -59,8 +81,8 @@ class PangleLocation {
   }
 }
 
-final _kDevicePixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
-final _kPhysicalSize = WidgetsBinding.instance.window.physicalSize;
+final _kDevicePixelRatio = window.devicePixelRatio;
+final _kPhysicalSize = window.physicalSize;
 
 final kPangleScreenWidth = _kPhysicalSize.width / _kDevicePixelRatio;
 final kPangleScreenHeight = _kPhysicalSize.height / _kDevicePixelRatio;
@@ -74,9 +96,9 @@ class PangleExpressSize {
   ///
   /// [width] 宽度，必选, 如果width超过屏幕，默认使用屏幕宽
   /// [height] 高度，必选
-  PangleExpressSize({double width, double height})
-      : assert(width != null && width > 0),
-        assert(height != null && height > 0),
+  PangleExpressSize({required double width, required double height})
+      : assert(width > 0),
+        assert(height > 0),
         this.width = width > kPangleScreenWidth ? kPangleScreenWidth : width,
         this.height = height > kPangleScreenWidth / width * height
             ? kPangleScreenWidth / width * height
@@ -86,7 +108,7 @@ class PangleExpressSize {
   ///
   /// [aspectRatio] item宽高比例
   PangleExpressSize.aspectRatio(double aspectRatio)
-      : assert(aspectRatio != null && aspectRatio > 0),
+      : assert(aspectRatio > 0),
         this.width = kPangleScreenWidth,
         this.height = kPangleScreenWidth / aspectRatio;
 
@@ -102,11 +124,13 @@ class PangleExpressSize {
       : this.width = kPangleScreenWidth * widthPercent,
         this.height = kPangleScreenHeight * heightPercent;
 
-  PangleExpressSize.widthPercent(double widthPercent, {double aspectRatio})
+  PangleExpressSize.widthPercent(double widthPercent,
+      {required double aspectRatio})
       : this.width = kPangleScreenWidth * widthPercent,
         this.height = kPangleScreenWidth * widthPercent / aspectRatio;
 
-  PangleExpressSize.heightPercent(double heightPercent, {double aspectRatio})
+  PangleExpressSize.heightPercent(double heightPercent,
+      {required double aspectRatio})
       : this.width = kPangleScreenHeight * heightPercent * aspectRatio,
         this.height = kPangleScreenHeight * heightPercent;
 
@@ -127,9 +151,9 @@ class PangleImageSize {
   ///
   /// [width] 宽度，必选, 如果width超过屏幕，默认使用屏幕宽
   /// [height] 高度，必选
-  PangleImageSize({double width, double height})
-      : assert(width != null && width > 0),
-        assert(height != null && height > 0),
+  PangleImageSize({required double width, required double height})
+      : assert(width > 0),
+        assert(height > 0),
         this.width = width > kPangleScreenWidth ? kPangleScreenWidth : width,
         this.height = height > kPangleScreenWidth / width * height
             ? kPangleScreenWidth / width * height
@@ -137,7 +161,7 @@ class PangleImageSize {
 
   /// [aspectRatio] item宽高比例
   PangleImageSize.aspectRatio(double aspectRatio)
-      : assert(aspectRatio != null && aspectRatio > 0),
+      : assert(aspectRatio > 0),
         this.width = kPangleScreenWidth,
         this.height = kPangleScreenWidth / aspectRatio;
 
@@ -153,11 +177,13 @@ class PangleImageSize {
       : this.width = kPangleScreenWidth * widthPercent,
         this.height = kPangleScreenHeight * heightPercent;
 
-  PangleImageSize.widthPercent(double widthPercent, {double aspectRatio})
+  PangleImageSize.widthPercent(double widthPercent,
+      {required double aspectRatio})
       : this.width = kPangleScreenWidth * widthPercent,
         this.height = kPangleScreenWidth * widthPercent / aspectRatio;
 
-  PangleImageSize.heightPercent(double heightPercent, {double aspectRatio})
+  PangleImageSize.heightPercent(double heightPercent,
+      {required double aspectRatio})
       : this.width = kPangleScreenHeight * heightPercent * aspectRatio,
         this.height = kPangleScreenHeight * heightPercent;
 
@@ -173,13 +199,13 @@ class PangleImageSize {
 ///
 class PangleResult {
   /// 结果码
-  final int code;
+  final int? code;
 
   /// 一般是错误信息
-  final String message;
+  final String? message;
 
   /// 适用于需要验证结果的广告，如激励视频
-  final bool verify;
+  final bool? verify;
 
   const PangleResult({this.code, this.message, this.verify = false});
 
@@ -188,7 +214,7 @@ class PangleResult {
 
   /// 解析插件返回的结果
   ///
-  factory PangleResult.fromJson(Map<String, dynamic> json) {
+  factory PangleResult.fromJson(Map<String, dynamic>? json) {
     if (json == null) {
       return PangleResult(code: -1, message: 'unknown');
     }

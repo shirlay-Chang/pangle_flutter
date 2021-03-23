@@ -10,19 +10,15 @@ import Flutter
 
 public final class PangleAdManager: NSObject {
     public static let shared = PangleAdManager()
-    
-    private var feedAdCollection: [String: BUNativeAd] = [:]
-    
+
     private var expressAdCollection: [String: BUNativeExpressAdView] = [:]
-    
-    private var rewardedVideoAdCollection: [Any] = []
-    
-    private var fullscreenVideoAdCollection: [Any] = []
-    
+
+    private var rewardedVideoAdData: [String: [Any]] = [:]
+
+    private var fullscreenVideoAdData: [String: [Any]] = [:]
+
     private var taskList: [FLTTaskProtocol] = []
-    
-    private var expressRewardTask: NativeExpressRewardAdTask?
-    
+
     fileprivate func execTask(_ task: FLTTaskProtocol, _ loadingType: LoadingType? = nil) -> (@escaping (Any) -> Void) -> Void {
         self.taskList.append(task)
         return { result in
@@ -39,31 +35,31 @@ public final class PangleAdManager: NSObject {
             }
         }
     }
-    
+
     public func initialize(_ args: [String: Any?]) {
         let appId: String = args["appId"] as! String
         let logLevel: Int? = args["logLevel"] as? Int
         let coppa: UInt? = args["coppa"] as? UInt
         let isPaidApp: Bool? = args["coppa"] as? Bool
-        
+
         BUAdSDKManager.setAppID(appId)
-        
+
         if isPaidApp != nil {
             BUAdSDKManager.setIsPaidApp(isPaidApp!)
         }
-        
+
         if logLevel != nil {
             BUAdSDKManager.setLoglevel(BUAdSDKLogLevel(rawValue: logLevel!)!)
         }
-        
+
         if coppa != nil {
             BUAdSDKManager.setCoppa(coppa!)
         }
     }
-    
+
     public func loadSplashAd(_ args: [String: Any?], result: @escaping FlutterResult) {
         let isExpress: Bool = args["isExpress"] as? Bool ?? false
-        
+
         if isExpress {
             let task = FLTSplashExpressAdTask(args)
             self.execTask(task)({ object in
@@ -76,126 +72,79 @@ public final class PangleAdManager: NSObject {
             })
         }
     }
-    
+
     public func loadRewardVideoAd(_ args: [String: Any?], result: @escaping FlutterResult) {
-        let isExpress: Bool = args["isExpress"] as? Bool ?? false
         let loadingTypeIndex: Int = args["loadingType"] as! Int
-        var loadingType = LoadingType(rawValue: loadingTypeIndex)!
-        
+        let loadingType = LoadingType(rawValue: loadingTypeIndex)!
+
         if loadingType == .preload || loadingType == .normal {
-            
-            if isExpress, let expressRewardTask = self.expressRewardTask {
-                expressRewardTask.showAd {
-                    switch $0 {
-                    case let .failure(error):
-                        let e = error as NSError?
-                        result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
-                    case let .success(successed):
-                        result(["code": 0, "verify": successed])
-                    }
+            let success = showRewardedVideoAd(args)({ [unowned self] object in
+                if loadingType == .preload {
+                    loadRewardVideoAdOnly(args, loadingType: .preload_only)
                 }
-                return
-            }
-            
-            let success = self.showRewardedVideoAd(isExpress)({ object in
                 result(object)
             })
-            if success {
-                if loadingType == .normal {
-                    return
-                }
-            } else {
-                loadingType = .normal
+            if !success {
+                loadRewardVideoAdOnly(args, loadingType: .normal, result: result)
             }
-        }
-        
-        if isExpress {
-            self.expressRewardTask = NativeExpressRewardAdTask(args: args, loadingType: loadingType) { data in
-                switch data {
-                case let .failure(error):
-                    let e = error as NSError?
-                    result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
-                case let .success(successed):
-                    result(["code": 0, "verify": successed])
-                }
-            }
-            self.expressRewardTask?.loadAdData()
-//            let task = FLTRewardedVideoExpressAdTask(args)
-//            let text = Test()
-//            self.execTask(task, loadingType)({ data in
-//                text
-//                if loadingType == .normal || loadingType == .preload_only {
-//                    result(data)
-//                }
-//            })
         } else {
-            let task = FLTRewardedVideoAdTask(args)
-            self.execTask(task, loadingType)({ data in
-                if loadingType == .normal || loadingType == .preload_only {
-                    result(data)
-                }
-            })
+            loadRewardVideoAdOnly(args, loadingType: .preload_only, result: result)
         }
+
     }
-    
+
+    private func loadRewardVideoAdOnly(_ args: [String: Any?], loadingType: LoadingType, result: FlutterResult? = nil) {
+        let task = FLTRewardedVideoExpressAdTask(args)
+        execTask(task, loadingType)({ data in
+            if loadingType == .normal || loadingType == .preload_only {
+                result?(data)
+            }
+        })
+    }
+
     public func loadFeedAd(_ args: [String: Any?], result: @escaping FlutterResult) {
-        let isExpress: Bool = args["isExpress"] as? Bool ?? false
-        
-        if isExpress {
-            let task = FLTNativeExpressAdTask(args)
-            self.execTask(task)({ data in
-                result(data)
-            })
-        } else {
-            let task = FLTNativeAdTask(args)
-            self.execTask(task)({ data in
-                result(data)
-            })
-        }
-    }
-    
-    public func loadInterstitialAd(_ args: [String: Any?], result: @escaping FlutterResult) {
-        
-        let task = FLTInterstitialExpressAdTask(args)
-        self.execTask(task)({ data in
+        let task = FLTNativeExpressAdTask(args)
+        execTask(task)({ data in
             result(data)
         })
     }
-    
+
+    public func loadInterstitialAd(_ args: [String: Any?], result: @escaping FlutterResult) {
+
+        let task = FLTInterstitialExpressAdTask(args)
+        execTask(task)({ data in
+            result(data)
+        })
+    }
+
     public func loadFullscreenVideoAd(_ args: [String: Any?], result: @escaping FlutterResult) {
-        let isExpress: Bool = args["isExpress"] as? Bool ?? false
         let loadingTypeIndex: Int = args["loadingType"] as! Int
-        var loadingType = LoadingType(rawValue: loadingTypeIndex)!
-        
+        let loadingType = LoadingType(rawValue: loadingTypeIndex)!
+
         if loadingType == .preload || loadingType == .normal {
-            let success = self.showFullScreenVideoAd(isExpress)({ object in
+            let success = showFullScreenVideoAd(args)({ [unowned self] object in
+                if loadingType == .preload {
+                    loadFullscreenVideoAdOnly(args, loadingType: .preload_only)
+                }
                 result(object)
             })
-            if success {
-                if loadingType == .normal {
-                    return
-                }
-                return
-            } else {
-                loadingType = .normal
+            if !success {
+                loadFullscreenVideoAdOnly(args, loadingType: .normal, result: result)
             }
-        }
-        
-        if isExpress {
-            let task = FLTFullscreenVideoExpressAdTask(args)
-            self.execTask(task, loadingType)({ data in
-                if loadingType == .normal || loadingType == .preload_only {
-                    result(data)
-                }
-            })
         } else {
-            let task = FLTFullscreenVideoAdTask(args)
-            self.execTask(task, loadingType)({ data in
-                if loadingType == .normal || loadingType == .preload_only {
-                    result(data)
-                }
-            })
+            loadFullscreenVideoAdOnly(args, loadingType: .preload_only, result: result)
         }
+
+
+    }
+
+    private func loadFullscreenVideoAdOnly(_ args: [String: Any?], loadingType: LoadingType, result: FlutterResult? = nil) {
+        let task = FLTFullscreenVideoExpressAdTask(args)
+        execTask(task, loadingType)({ data in
+            if loadingType == .normal || loadingType == .preload_only {
+                result?(data)
+            }
+        })
     }
 }
 
@@ -206,27 +155,7 @@ enum LoadingType: Int {
 }
 
 extension PangleAdManager {
-    public func setFeedAd(_ nativeAds: [BUNativeAd]?) {
-        guard let nativeAds = nativeAds else {
-            return
-        }
-        var feedAds: [String: BUNativeAd] = [:]
-        for nativeAd in nativeAds {
-            feedAds[String(nativeAd.hash)] = nativeAd
-        }
-        self.feedAdCollection.merge(feedAds, uniquingKeysWith: { _, last in last })
-    }
-    
-    public func getFeedAd(_ key: String) -> BUNativeAd? {
-        return self.feedAdCollection[key]
-    }
-    
-    public func removeFeedAd(_ key: String?) {
-        if key != nil {
-            self.feedAdCollection.removeValue(forKey: key!)
-        }
-    }
-    
+
     public func setExpressAd(_ nativeExpressAdViews: [BUNativeExpressAdView]?) {
         guard let nativeAds = nativeExpressAdViews else {
             return
@@ -235,56 +164,45 @@ extension PangleAdManager {
         for nativeAd in nativeAds {
             expressAds[String(nativeAd.hash)] = nativeAd
         }
-        self.expressAdCollection.merge(expressAds, uniquingKeysWith: { _, last in last })
+        expressAdCollection.merge(expressAds, uniquingKeysWith: { _, last in last })
     }
-    
+
     public func getExpressAd(_ key: String) -> BUNativeExpressAdView? {
-        return self.expressAdCollection[key]
+        expressAdCollection[key]
     }
-    
-    public func removeExpressAd(_ key: String?) {
+
+    public func removeExpressAd(_ key: String?) -> Bool {
         if key != nil {
-            self.expressAdCollection.removeValue(forKey: key!)
+            let value = expressAdCollection.removeValue(forKey: key!)
+            return value != nil
         }
+        return false
     }
-    
-    public func setRewardedVideoAd(_ ad: NSObject?) {
-//        if ad is BUNativeExpressRewardedVideoAd {
-//            self.rewardedVideoExpressAdCollection.append(ad as! BUNativeExpressRewardedVideoAd)
-//        } else if ad is BURewardedVideoAd {
-//            self.rewardedVideoAdCollection.append(ad as! BURewardedVideoAd)
-//        }
+
+    public func setRewardedVideoAd(_ slotId: String, _ ad: NSObject?) {
         if ad != nil {
-            self.rewardedVideoAdCollection.append(ad!)
+            var data = rewardedVideoAdData[slotId] ?? []
+            data.append(ad!)
+            rewardedVideoAdData[slotId] = data
         }
     }
-    
-    public func showRewardedVideoAd(_ isExpress: Bool) -> (@escaping (Any) -> Void) -> Bool {
-        return { result in
-            if self.rewardedVideoAdCollection.count > 0 {
-                let obj = self.rewardedVideoAdCollection[0]
-                
-                if obj is BURewardedVideoAd {
-                    let ad = obj as! BURewardedVideoAd
-                    ad.didReceiveSuccess = { verify in
-                        self.rewardedVideoAdCollection.removeFirst()
-                        result(["code": 0, "verify": verify])
-                    }
-                    ad.didReceiveFail = { error in
-                        self.rewardedVideoAdCollection.removeFirst()
-                        let e = error as NSError?
-                        result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
-                    }
-                    let vc = AppUtil.getVC()
-                    ad.show(fromRootViewController: vc)
-                } else if obj is BUNativeExpressRewardedVideoAd {
+
+    public func showRewardedVideoAd(_ args: [String: Any?]) -> (@escaping (Any) -> Void) -> Bool {
+        { result in
+            let slotId: String = args["slotId"] as! String
+            var data = self.rewardedVideoAdData[slotId] ?? []
+            if data.count > 0 {
+                let obj = data[0]
+                if obj is BUNativeExpressRewardedVideoAd {
                     let ad = obj as! BUNativeExpressRewardedVideoAd
-                    ad.didReceiveSuccess = { [weak ad] verify in
-                        self.rewardedVideoAdCollection.removeFirst()
+                    ad.didReceiveSuccess = { verify in
+                        data.removeFirst()
+                        self.rewardedVideoAdData[slotId] = data
                         result(["code": 0, "verify": verify])
                     }
                     ad.didReceiveFail = { error in
-                        self.rewardedVideoAdCollection.removeFirst()
+                        data.removeFirst()
+                        self.rewardedVideoAdData[slotId] = data
                         let e = error as NSError?
                         result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
                     }
@@ -293,43 +211,36 @@ extension PangleAdManager {
                     return true
                 }
             }
-            
+
             return false
         }
     }
-    
-    public func setFullScreenVideoAd(_ ad: NSObject?) {
+
+    public func setFullScreenVideoAd(_ slotId: String, _ ad: NSObject?) {
         if ad != nil {
-            self.fullscreenVideoAdCollection.append(ad!)
+            var data = fullscreenVideoAdData[slotId] ?? []
+            data.append(ad!)
+            fullscreenVideoAdData[slotId] = data
         }
     }
-    
-    public func showFullScreenVideoAd(_ isExpress: Bool) -> (@escaping (Any) -> Void) -> Bool {
-        return { result in
-            if self.fullscreenVideoAdCollection.count > 0 {
-                let obj = self.fullscreenVideoAdCollection[0]
-                
-                if obj is BUFullscreenVideoAd {
-                    let ad = obj as! BUFullscreenVideoAd
-                    ad.didReceiveSuccess = {
-                        self.fullscreenVideoAdCollection.removeFirst()
-                        result(["code": 0])
-                    }
-                    ad.didReceiveFail = { error in
-                        self.fullscreenVideoAdCollection.removeFirst()
-                        let e = error as NSError?
-                        result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
-                    }
-                    let vc = AppUtil.getVC()
-                    ad.show(fromRootViewController: vc)
-                } else if obj is BUNativeExpressFullscreenVideoAd {
+
+    public func showFullScreenVideoAd(_ args: [String: Any?]) -> (@escaping (Any) -> Void) -> Bool {
+        { result in
+            let slotId: String = args["slotId"] as! String
+            var data = self.fullscreenVideoAdData[slotId] ?? []
+            if data.count > 0 {
+                let obj = data[0]
+
+                if obj is BUNativeExpressFullscreenVideoAd {
                     let ad = obj as! BUNativeExpressFullscreenVideoAd
                     ad.didReceiveSuccess = {
-                        self.fullscreenVideoAdCollection.removeFirst()
+                        data.removeFirst()
+                        self.fullscreenVideoAdData[slotId] = data
                         result(["code": 0])
                     }
                     ad.didReceiveFail = { error in
-                        self.fullscreenVideoAdCollection.removeFirst()
+                        data.removeFirst()
+                        self.fullscreenVideoAdData[slotId] = data
                         let e = error as NSError?
                         result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
                     }
@@ -338,7 +249,7 @@ extension PangleAdManager {
                     return true
                 }
             }
-            
+
             return false
         }
     }

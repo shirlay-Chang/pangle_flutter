@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:pangle_flutter/pangle_flutter.dart';
 
@@ -11,65 +9,51 @@ class BannerExpressPage extends StatefulWidget {
 }
 
 class _BannerExpressPageState extends State<BannerExpressPage> {
-  bool _enableClickAction = true;
-
-  final _banner1Key = GlobalKey<BannerViewState>();
-
-  final _banner2Key = GlobalKey<BannerViewState>();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Banner Express AD'),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: Offstage(
-        offstage: !Platform.isIOS,
-        child: FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              _enableClickAction = !_enableClickAction;
-            });
-            _banner1Key.currentState.setUserInteractionEnabled(
-              _enableClickAction,
-            );
-            _banner2Key.currentState.setUserInteractionEnabled(
-              _enableClickAction,
-            );
-          },
-          child: Icon(
-            _enableClickAction ? Icons.lock_open : Icons.lock_outline,
-          ),
-        ),
-      ),
       body: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            BannerView(
-              key: _banner1Key,
-              iOS: IOSBannerConfig(
-                slotId: kBannerExpressId,
-                expressSize: PangleExpressSize(width: 600, height: 200),
-              ),
-              android: AndroidBannerConfig(
-                slotId: kBannerExpressId,
-                expressSize: PangleExpressSize(width: 600, height: 200),
-              ),
-            ),
-            BannerView(
-              key: _banner2Key,
-              iOS: IOSBannerConfig(
-                slotId: kBannerExpressId,
-                expressSize: PangleExpressSize.aspectRatio(1.667),
-                isUserInteractionEnabled: false,
-              ),
-              android: AndroidBannerConfig(
-                slotId: kBannerExpressId,
-                expressSize: PangleExpressSize.aspectRatio(1.667),
+            AspectRatio(
+              aspectRatio: 600 / 260.0,
+              child: BannerView(
+                // key: _banner1Key,
+                iOS: IOSBannerConfig(
+                  slotId: kBannerExpressId600x260,
+                  expressSize: PangleExpressSize(width: 600, height: 260),
+                ),
+                android: AndroidBannerConfig(
+                  slotId: kBannerExpressId600x260,
+                  expressSize: PangleExpressSize(width: 600, height: 260),
+                ),
               ),
             ),
+            Container(
+              height: 260,
+              child: BannerView(
+                iOS: IOSBannerConfig(
+                  slotId: kBannerExpressId600x260,
+                  expressSize: PangleExpressSize(width: 600, height: 260),
+                ),
+                android: AndroidBannerConfig(
+                  slotId: kBannerExpressId600x260,
+                  expressSize: PangleExpressSize(width: 600, height: 260),
+                ),
+                onBannerViewCreated: (BannerViewController controller) {
+                  controller.updateTouchableBounds([Rect.zero]);
+                  controller.updateRestrictedBounds([Rect.zero]);
+                },
+                onClick: () {},
+              ),
+            ),
+            SizedBox(height: 1080),
+            Center(child: Text('--- 这是底线 ---')),
+            SizedBox(height: 16),
           ],
         ),
       ),

@@ -1,14 +1,34 @@
-import 'package:flutter/foundation.dart';
-import 'package:pangle_flutter/pangle_flutter.dart';
+/*
+ * Copyright (c) 2021 nullptrX
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
+import 'config.dart';
 import 'constant.dart';
-import 'extension.dart';
+import 'model.dart';
 
-class IOSConfig {
+class IOSConfig implements Config {
   final String appId;
-  final PangleLogLevel logLevel;
-  final int coppa;
-  final bool isPaidApp;
+  final PangleLogLevel? logLevel;
+  final int? coppa;
+  final bool? isPaidApp;
 
   /// Register the ad config for iOS
   ///
@@ -16,14 +36,15 @@ class IOSConfig {
   /// [logLevel] optional. default none
   /// [coppa] optional. Coppa 0 adult, 1 child
   /// [isPaidApp] optional. Set whether the app is a paid app, the default is a non-paid app.
-  IOSConfig({
-    @required this.appId,
+  const IOSConfig({
+    required this.appId,
     this.logLevel,
     this.coppa,
     this.isPaidApp,
-  }) : assert(appId.isNotBlank);
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'appId': appId,
@@ -34,12 +55,11 @@ class IOSConfig {
   }
 }
 
-class IOSSplashConfig {
+class IOSSplashConfig implements Config {
   final String slotId;
-  final double tolerateTimeout;
-  final bool hideSkipButton;
+  final double? tolerateTimeout;
+  final bool? hideSkipButton;
   final bool isExpress;
-  final PangleExpressSize expressSize;
 
   /// The splash ad config for iOS
   ///
@@ -47,37 +67,33 @@ class IOSSplashConfig {
   /// [tolerateTimeout] optional. Maximum allowable load timeout, default 3s, unit s.
   /// [hideSkipButton] optional. Whether hide skip button, default NO.
   ///    If you hide the skip button, you need to customize the countdown.
-  /// [isExpress] optional. experimental. 个性化模板广告.
-  /// [expressSize] optional. 模板宽高
-  IOSSplashConfig({
-    @required this.slotId,
+  ///  [isExpress] 开屏无模板渲染，默认false
+  const IOSSplashConfig({
+    required this.slotId,
     this.tolerateTimeout,
     this.hideSkipButton,
-    this.isExpress = true,
-    this.expressSize,
-  }) : assert(slotId.isNotBlank);
+    this.isExpress = false,
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'slotId': slotId,
+      'isExpress': isExpress,
       'tolerateTimeout': tolerateTimeout,
       'hideSkipButton': hideSkipButton,
-      'isExpress': isExpress,
-      'expressSize': expressSize?.toJson(),
     };
   }
 }
 
-class IOSRewardedVideoConfig {
+class IOSRewardedVideoConfig implements Config {
   final String slotId;
-  final String userId;
-  final String rewardName;
-  final int rewardAmount;
-  final String extra;
+  final String? userId;
+  final String? rewardName;
+  final int? rewardAmount;
+  final String? extra;
   final PangleLoadingType loadingType;
-  final bool isExpress;
-  final PangleExpressSize expressSize;
 
   /// The rewarded video ad config for Android
   ///
@@ -92,20 +108,17 @@ class IOSRewardedVideoConfig {
   /// [rewardAmount] optional. number of rewards.
   /// [extra] optional. serialized string.
   /// [loadingType] optional. 加载广告的类型，默认[PangleLoadingType.normal]
-  /// [isExpress] optional. 个性化模板广告
-  /// [expressSize] optional. 模板宽高，保留字段(iOS暂不支持该类型指定宽高)
-  IOSRewardedVideoConfig({
-    @required this.slotId,
+  const IOSRewardedVideoConfig({
+    required this.slotId,
     this.userId,
     this.rewardName,
     this.rewardAmount,
     this.extra,
     this.loadingType = PangleLoadingType.normal,
-    this.isExpress = true,
-    this.expressSize,
-  }) : assert(slotId.isNotBlank);
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'slotId': slotId,
@@ -113,139 +126,110 @@ class IOSRewardedVideoConfig {
       'rewardName': rewardName,
       'rewardAmount': rewardAmount,
       'extra': extra,
-      'loadingType': loadingType?.index,
-      'isExpress': isExpress,
-      'expressSize': expressSize?.toJson(),
+      'loadingType': loadingType.index,
     };
   }
 }
 
-class IOSBannerConfig {
+class IOSBannerConfig implements Config {
   final String slotId;
-  final PangleImgSize imgSize;
   final PangleExpressSize expressSize;
-  final bool isUserInteractionEnabled;
-  final int interval;
+  final int? interval;
 
   /// The feed ad config for iOS
   ///
   /// [slotId] required. The unique identifier of a banner ad.
-  /// [imgSize] required. Image size.
   /// [expressSize] optional. 模板宽高
   /// [isUserInteractionEnabled] 广告位是否可点击，true可以，false不可以
   /// [interval] The carousel interval, in seconds, is set in the range of 30~120s,
   ///   and is passed during initialization. If it does not meet the requirements,
   ///   it will not be in carousel ad.
-  IOSBannerConfig({
-    @required this.slotId,
-    this.imgSize = PangleImgSize.banner600_150,
-    this.expressSize,
-    this.isUserInteractionEnabled = true,
+  const IOSBannerConfig({
+    required this.slotId,
+    required this.expressSize,
     this.interval,
-  })  : assert(slotId.isNotBlank),
-        assert(expressSize != null);
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'slotId': slotId,
-      'imgSize': imgSize?.index,
-      'expressSize': expressSize?.toJson(),
-      'isUserInteractionEnabled': isUserInteractionEnabled,
+      'expressSize': expressSize.toJson(),
       'interval': interval,
     };
   }
 }
 
-class IOSFeedConfig {
+class IOSFeedConfig implements Config {
   final String slotId;
-  final PangleImgSize imgSize;
-
-  final int count;
-  final bool isExpress;
+  final int? count;
   final PangleExpressSize expressSize;
 
   /// The feed ad config for iOS
   ///
   /// [slotId] required. The unique identifier of a feed ad.
-  /// [imgSize] required. Image size.
   /// [count] It is recommended to request no more than 3 ads. The maximum is 10. default 3
-  /// [isExpress] optional. 个性化模板广告.
   /// [expressSize] optional. 模板宽高.
-  IOSFeedConfig({
-    @required this.slotId,
-    this.imgSize = PangleImgSize.feed690_388,
+  const IOSFeedConfig({
+    required this.slotId,
+    required this.expressSize,
     this.count,
-    this.isExpress = true,
-    this.expressSize,
-  })  : assert(slotId.isNotBlank),
-        assert(!isExpress || (isExpress && expressSize != null));
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'slotId': slotId,
       'count': count,
-      'imgSize': imgSize?.index,
-      'isExpress': isExpress,
-      'expressSize': expressSize?.toJson(),
+      'expressSize': expressSize.toJson(),
     };
   }
 }
 
-class IOSInterstitialConfig {
+class IOSInterstitialConfig implements Config {
   final String slotId;
-  final PangleImgSize imgSize;
   final PangleExpressSize expressSize;
 
   /// The interstitial ad config for iOS
   ///
   /// [slotId] required. The unique identifier of a interstitial ad.
-  /// [imgSize] required. Image size. 该宽高为你申请的广告位宽高，请根据实际情况赋值
   /// [expressSize] optional. 模板宽高.
-  IOSInterstitialConfig({
-    @required this.slotId,
-    this.imgSize = PangleImgSize.interstitial600_400,
-    this.expressSize,
-  })  : assert(slotId.isNotBlank),
-        assert(expressSize != null);
+  const IOSInterstitialConfig({
+    required this.slotId,
+    required this.expressSize,
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'slotId': slotId,
-      'imgSize': imgSize?.index,
-      'expressSize': expressSize?.toJson(),
+      'expressSize': expressSize.toJson(),
     };
   }
 }
 
-class IOSFullscreenVideoConfig {
+class IOSFullscreenVideoConfig implements Config {
   final String slotId;
   final PangleLoadingType loadingType;
-  final bool isExpress;
-  final PangleExpressSize expressSize;
 
   /// The full screen video ad config for iOS
   ///
   /// [slotId] required. The unique identifier of a full screen video ad.
   /// [loadingType] optional. 加载广告的类型，默认[PangleLoadingType.normal]
-  /// [isExpress] optional. 个性化模板广告
-  /// [expressSize] optional. 模板宽高，保留字段(iOS暂不支持该类型指定宽高)
-  IOSFullscreenVideoConfig({
-    @required this.slotId,
+  const IOSFullscreenVideoConfig({
+    required this.slotId,
     this.loadingType = PangleLoadingType.normal,
-    this.isExpress = true,
-    this.expressSize,
-  }) : assert(slotId.isNotBlank);
+  });
 
   /// Convert config to json
+  @override
   Map<String, dynamic> toJSON() {
     return {
       'slotId': slotId,
-      'loadingType': loadingType?.index,
-      'isExpress': isExpress,
-      'expressSize': expressSize?.toJson(),
+      'loadingType': loadingType.index,
     };
   }
 }

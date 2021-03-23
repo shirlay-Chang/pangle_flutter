@@ -3,9 +3,26 @@ package io.github.nullptrx.pangleflutter
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageInfo
-import com.bytedance.sdk.openadsdk.*
-import io.github.nullptrx.pangleflutter.common.*
-import io.github.nullptrx.pangleflutter.delegate.*
+import com.bytedance.sdk.openadsdk.AdSlot
+import com.bytedance.sdk.openadsdk.TTAdConfig
+import com.bytedance.sdk.openadsdk.TTAdConstant
+import com.bytedance.sdk.openadsdk.TTAdManager
+import com.bytedance.sdk.openadsdk.TTAdNative
+import com.bytedance.sdk.openadsdk.TTAdSdk
+import com.bytedance.sdk.openadsdk.TTCustomController
+import com.bytedance.sdk.openadsdk.TTFullScreenVideoAd
+import com.bytedance.sdk.openadsdk.TTLocation
+import com.bytedance.sdk.openadsdk.TTNativeExpressAd
+import com.bytedance.sdk.openadsdk.TTRewardVideoAd
+import io.github.nullptrx.pangleflutter.common.PangleLoadingType
+import io.github.nullptrx.pangleflutter.common.PangleTitleBarTheme
+import io.github.nullptrx.pangleflutter.common.TTSizeF
+import io.github.nullptrx.pangleflutter.delegate.FLTBannerExpressAd
+import io.github.nullptrx.pangleflutter.delegate.FLTFeedExpressAd
+import io.github.nullptrx.pangleflutter.delegate.FLTFullScreenVideoAd
+import io.github.nullptrx.pangleflutter.delegate.FLTRewardedVideoAd
+import io.github.nullptrx.pangleflutter.delegate.FullScreenVideoAdInteractionImpl
+import io.github.nullptrx.pangleflutter.delegate.RewardAdInteractionImpl
 import io.github.nullptrx.pangleflutter.util.asList
 import io.github.nullptrx.pangleflutter.util.asMap
 import java.util.*
@@ -18,13 +35,10 @@ class PangleAdManager {
   }
 
 
-  private val feedAdCollection = Collections.synchronizedMap(mutableMapOf<String, PangleFeedAd>())
-  private val bannerAdCollection = Collections.synchronizedMap(mutableMapOf<String, PangleBannerAd>())
-  private val expressAdCollection = Collections.synchronizedMap(mutableMapOf<String, PangleExpressAd>())
-  private val rewardedVideoAdCollection = Collections.synchronizedList(mutableListOf<TTRewardVideoAd>())
-  private val fullScreenVideoAdCollection = Collections.synchronizedList(mutableListOf<TTFullScreenVideoAd>())
+  private val expressAdCollection = Collections.synchronizedMap(mutableMapOf<String, TTNativeExpressAd>())
+  private val rewardedVideoAdData = Collections.synchronizedMap(mutableMapOf<String, MutableList<TTRewardVideoAd>>())
+  private val fullScreenVideoAdData = Collections.synchronizedMap(mutableMapOf<String, MutableList<TTFullScreenVideoAd>>())
 
-  private lateinit var context: Context
   private lateinit var ttAdManager: TTAdManager
   private var ttAdNative: TTAdNative? = null
     get() = field
@@ -35,73 +49,36 @@ class PangleAdManager {
   }
 
   /**
-   * Feed
-   */
-  fun setFeedAd(size: TTSize, ttFeedAds: List<TTFeedAd>): List<String> {
-    val data = mutableListOf<String>()
-    ttFeedAds.forEach {
-      val key = it.hashCode().toString()
-      feedAdCollection[key] = PangleFeedAd(size, it)
-      data.add(key)
-    }
-    return data
-  }
-
-  fun getFeedAd(key: String): PangleFeedAd? {
-    return feedAdCollection[key]
-  }
-
-  fun removeFeedAd(key: String) {
-    feedAdCollection.remove(key)
-  }
-
-  /**
-   * Banner
-   */
-  fun setBannerAd(size: TTSize, ttBannerAds: List<TTBannerAd>): List<String> {
-    val data = mutableListOf<String>()
-    ttBannerAds.forEach {
-      val key = it.hashCode().toString()
-      bannerAdCollection[key] = PangleBannerAd(size, it)
-      data.add(key)
-    }
-    return data
-  }
-
-  fun getBannerAd(key: String): PangleBannerAd? {
-    return bannerAdCollection[key]
-  }
-
-  fun removeBannerAd(key: String) {
-    bannerAdCollection.remove(key)
-  }
-
-  /**
    * Express
    */
-  fun setExpressAd(size: TTSizeF, ttBannerAds: List<TTNativeExpressAd>): List<String> {
+  fun setExpressAd(ttBannerAds: List<TTNativeExpressAd>): List<String> {
     val data = mutableListOf<String>()
     ttBannerAds.forEach {
       val key = it.hashCode().toString()
-      expressAdCollection[key] = PangleExpressAd(size, it)
+      expressAdCollection[key] = it
       data.add(key)
     }
     return data
   }
 
-  fun getExpressAd(key: String): PangleExpressAd? {
+  fun getExpressAd(key: String): TTNativeExpressAd? {
     return expressAdCollection[key]
   }
 
-  fun removeExpressAd(key: String): PangleExpressAd? {
-    val it = expressAdCollection.remove(key)
-    return it
+  fun removeExpressAd(key: String): Boolean {
+    if (expressAdCollection.containsKey(key)) {
+      val it = expressAdCollection.remove(key)
+      it?.destroy()
+      return true
+    }
+    return false
   }
 
-  fun showRewardedVideoAd(activity: Activity?, result: (Any) -> Unit = {}): Boolean {
+  fun showRewardedVideoAd(slotId: String, activity: Activity?, result: (Any) -> Unit = {}): Boolean {
     activity ?: return false
-    if (rewardedVideoAdCollection.size > 0) {
-      val ad = rewardedVideoAdCollection.removeAt(0)
+    val data = rewardedVideoAdData[slotId] ?: mutableListOf()
+    if (data.size > 0) {
+      val ad = data.removeFirst()
       ad.setRewardAdInteractionListener(RewardAdInteractionImpl { obj ->
         result.invoke(obj)
       })
@@ -111,16 +88,19 @@ class PangleAdManager {
     return false
   }
 
-  fun setRewardedVideoAd(ad: TTRewardVideoAd?) {
+  fun setRewardedVideoAd(slotId: String, ad: TTRewardVideoAd?) {
     ad?.also {
-      rewardedVideoAdCollection.add(it)
+      val data = rewardedVideoAdData[slotId] ?: mutableListOf()
+      data.add(ad)
+      rewardedVideoAdData[slotId] = data
     }
   }
 
-  fun showFullScreenVideoAd(activity: Activity?, result: (Any) -> Unit = {}): Boolean {
+  fun showFullScreenVideoAd(slotId: String, activity: Activity?, result: (Any) -> Unit = {}): Boolean {
     activity ?: return false
-    if (fullScreenVideoAdCollection.size > 0) {
-      val ad = fullScreenVideoAdCollection.removeAt(0)
+    val data = fullScreenVideoAdData[slotId] ?: mutableListOf()
+    if (data.size > 0) {
+      val ad = data.removeFirst()
       ad.setFullScreenVideoAdInteractionListener(FullScreenVideoAdInteractionImpl { obj ->
         result.invoke(obj)
       })
@@ -130,16 +110,17 @@ class PangleAdManager {
     return false
   }
 
-  fun setFullScreenVideoAd(ad: TTFullScreenVideoAd?) {
+  fun setFullScreenVideoAd(slotId: String, ad: TTFullScreenVideoAd?) {
     ad?.also {
-      fullScreenVideoAdCollection.add(it)
+      val data = fullScreenVideoAdData[slotId] ?: mutableListOf()
+      data.add(ad)
+      fullScreenVideoAdData[slotId] = data
     }
   }
 
 
   fun initialize(activity: Activity?, args: Map<String, Any?>) {
     activity ?: return
-    context = activity
     val context: Context = activity
 
     val appId: String = args["appId"] as String
@@ -277,48 +258,27 @@ class PangleAdManager {
 
     activity ?: return
 
-    ttAdNative?.loadRewardVideoAd(adSlot, FLTRewardedVideoAd(activity, loadingType, result))
+
+    ttAdNative?.loadRewardVideoAd(adSlot, FLTRewardedVideoAd(adSlot.codeId, activity, loadingType, result))
 
   }
 
-  fun loadFeedAd(adSlot: AdSlot, result: (Any) -> Unit) {
-    val size = TTSize(adSlot.imgAcceptedWidth, adSlot.imgAcceptedHeight)
-    ttAdNative?.loadFeedAd(adSlot, FLTFeedAd(size, result))
-  }
 
   fun loadFeedExpressAd(adSlot: AdSlot, result: (Any) -> Unit) {
     val size = TTSizeF(adSlot.expressViewAcceptedWidth, adSlot.expressViewAcceptedHeight)
     ttAdNative?.loadNativeExpressAd(adSlot, FLTFeedExpressAd(size, result))
   }
 
-  fun loadBannerAd(adSlot: AdSlot, listener: TTAdNative.BannerAdListener) {
-    ttAdNative?.loadBannerAd(adSlot, listener)
-  }
-
   fun loadBannerExpressAd(adSlot: AdSlot, listener: TTAdNative.NativeExpressAdListener) {
     ttAdNative?.loadBannerExpressAd(adSlot, listener)
   }
 
-  internal fun loadBanner2Ad(adSlot: AdSlot, result: (Any) -> Unit) {
-    val size = TTSize(adSlot.imgAcceptedWidth, adSlot.imgAcceptedHeight)
-    ttAdNative?.loadBannerAd(adSlot, FLTBannerAd(size, result))
-  }
-
   internal fun loadBanner2ExpressAd(adSlot: AdSlot, result: (Any) -> Unit) {
-    val size = TTSizeF(adSlot.expressViewAcceptedWidth, adSlot.expressViewAcceptedHeight)
-    ttAdNative?.loadBannerExpressAd(adSlot, FLTBannerExpressAd(size, result))
-  }
-
-  fun loadInteractionAd(adSlot: AdSlot, listener: TTAdNative.InteractionAdListener) {
-    ttAdNative?.loadInteractionAd(adSlot, listener)
+    ttAdNative?.loadBannerExpressAd(adSlot, FLTBannerExpressAd(result))
   }
 
   fun loadInteractionExpressAd(adSlot: AdSlot, listener: TTAdNative.NativeExpressAdListener) {
     ttAdNative?.loadInteractionExpressAd(adSlot, listener)
-  }
-
-  fun loadNativeAd(adSlot: AdSlot, listener: TTAdNative.NativeAdListener) {
-    ttAdNative?.loadNativeAd(adSlot, listener)
   }
 
   fun loadNativeExpressAd(adSlot: AdSlot, listener: TTAdNative.NativeExpressAdListener) {
@@ -329,7 +289,7 @@ class PangleAdManager {
 
     activity ?: return
 
-    ttAdNative?.loadFullScreenVideoAd(adSlot, FLTFullScreenVideoAd(activity, loadingType, result))
+    ttAdNative?.loadFullScreenVideoAd(adSlot, FLTFullScreenVideoAd(adSlot.codeId, activity, loadingType, result))
 
   }
 

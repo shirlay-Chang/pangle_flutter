@@ -12,8 +12,6 @@ class RewardedVideoExpressPage extends StatefulWidget {
 }
 
 class _RewardedVideoExpressPageState extends State<RewardedVideoExpressPage> {
-  bool _loaded = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,15 +23,21 @@ class _RewardedVideoExpressPageState extends State<RewardedVideoExpressPage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             Center(
-              child: RaisedButton(
+              child: ElevatedButton(
                 onPressed: _onTapLoad,
                 child: Text('Load'),
               ),
             ),
             Center(
-              child: RaisedButton(
-                onPressed: _loaded ? _onTapShow : null,
-                child: Text('Show Ad'),
+              child: ElevatedButton(
+                onPressed: _onTapShow,
+                child: Text('Show ad'),
+              ),
+            ),
+            Center(
+              child: ElevatedButton(
+                onPressed: _onTapShowAndLoad,
+                child: Text('Show ad and preload'),
               ),
             ),
           ],
@@ -53,10 +57,7 @@ class _RewardedVideoExpressPageState extends State<RewardedVideoExpressPage> {
         loadingType: PangleLoadingType.preload_only,
       ),
     );
-
-    setState(() {
-      _loaded = result.ok;
-    });
+    print(jsonEncode(result));
   }
 
   _onTapShow() async {
@@ -71,8 +72,19 @@ class _RewardedVideoExpressPageState extends State<RewardedVideoExpressPage> {
       ),
     );
     print(jsonEncode(result));
-    setState(() {
-      _loaded = false;
-    });
+  }
+
+  _onTapShowAndLoad() async {
+    final result = await pangle.loadRewardedVideoAd(
+      iOS: IOSRewardedVideoConfig(
+        slotId: kRewardedVideoExpressId,
+        loadingType: PangleLoadingType.preload,
+      ),
+      android: AndroidRewardedVideoConfig(
+        slotId: kRewardedVideoExpressId,
+        loadingType: PangleLoadingType.preload,
+      ),
+    );
+    print(jsonEncode(result));
   }
 }

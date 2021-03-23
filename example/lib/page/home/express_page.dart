@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../common/ext.dart';
-import '../../page/common/empty_page.dart';
 import '../../page/express/banner_express_page.dart';
 import '../../page/express/feed_express_page.dart';
 import '../../page/express/fullscreen_video_express_page.dart';
@@ -16,7 +15,6 @@ class ExpressPage extends StatefulWidget {
 
 class _ExpressPageState extends State<ExpressPage> {
   final pages = {
-    'Splash Express AD': EmptyPage(),
     'Rewarded Video Express AD': RewardedVideoExpressPage(),
     'Banner Express AD': BannerExpressPage(),
     'Feed Express AD': FeedExpressPage(),
