@@ -21,7 +21,7 @@ internal final class FLTInterstitialExpressAd: NSObject, BUNativeExpresInterstit
     }
     
     func nativeExpresInterstitialAdRenderSuccess(_ interstitialAd: BUNativeExpressInterstitialAd) {
-        let vc = AppUtil.getVC()
+        let vc = currentViewController!
         interstitialAd.show(fromRootViewController: vc)
     }
     

@@ -206,7 +206,7 @@ extension PangleAdManager {
                         let e = error as NSError?
                         result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
                     }
-                    let vc = AppUtil.getVC()
+                    let vc = currentViewController!
                     ad.show(fromRootViewController: vc)
                     return true
                 }
@@ -244,7 +244,7 @@ extension PangleAdManager {
                         let e = error as NSError?
                         result(["code": e?.code ?? -1, "message": e?.localizedDescription ?? ""])
                     }
-                    let vc = AppUtil.getVC()
+                    let vc = currentViewController!
                     ad.show(fromRootViewController: vc)
                     return true
                 }

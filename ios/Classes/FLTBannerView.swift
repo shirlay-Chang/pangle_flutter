@@ -192,7 +192,7 @@ class BannerView: UIView {
         let viewWidth: Double
         let viewHeight: Double
 
-        let vc = AppUtil.getVC()
+        let vc = currentViewController!
         let expressArgs: [String: Double] = params["expressSize"] as! [String: Double]
         let width = expressArgs["width"]!
         let height = expressArgs["height"]!

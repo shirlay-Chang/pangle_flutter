@@ -20,7 +20,7 @@ internal final class FLTNativeExpressAdTask: FLTTaskProtocol {
     
     convenience init(_ args: [String: Any?]) {
         let slotId: String = args["slotId"] as! String
-        let count = args["count"] as? Int ?? Constant.kDefaultFeedAdCount
+        let count = args["count"] as? Int ?? 3
         
         let expressArgs = args["expressSize"] as! [String: Double]
         let width = expressArgs["width"]!

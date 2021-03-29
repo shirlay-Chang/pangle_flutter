@@ -6,6 +6,7 @@
 //
 
 import BUAdSDK
+import Flutter
 
 internal final class FLTNativeExpressAdViewDelegate: NSObject, BUNativeExpressAdViewDelegate {
     typealias Success = ([String]) -> Void

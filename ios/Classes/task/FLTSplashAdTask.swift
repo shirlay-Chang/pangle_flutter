@@ -28,7 +28,7 @@ internal final class FLTSplashAdTask: FLTTaskProtocol {
             splashView.hideSkipButton = hideSkipButton!
         }
 
-        let vc = AppUtil.getVC()
+        let vc = currentViewController!
         vc.view.addSubview(splashView)
         splashView.rootViewController = vc
         self.init(splashView)

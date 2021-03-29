@@ -36,7 +36,7 @@ internal final class FLTFullscreenVideoExpressAd: NSObject, BUNativeExpressFulls
             /// 必须回调，否则task不能销毁，导致内存泄漏
             self.success?()
         } else {
-            let vc = AppUtil.getVC()
+            let vc = currentViewController!
             fullscreenVideoAd.show(fromRootViewController: vc)
         }
     }

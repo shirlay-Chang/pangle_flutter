@@ -54,7 +54,7 @@ def flutter_install_ios_plugin_pods(ios_application_path = nil)
       pod plugin_name, :path => File.join('.symlinks', 'plugins', plugin_name, 'ios')
       if plugin_name == 'pangle_flutter'
         # cn代表国内，global代表海外
-        pod 'pangle_flutter/cn', :path => File.join('.symlinks', 'plugins', plugin_name, 'ios')
+#        pod 'pangle_flutter/cn', :path => File.join('.symlinks', 'plugins', plugin_name, 'ios')
       end
 
     end
@@ -67,6 +67,7 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  
 end
 
 post_install do |installer|

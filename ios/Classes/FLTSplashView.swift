@@ -117,7 +117,7 @@ class SplashView: UIView {
 
         let splashAdView = BUSplashAdView(slotID: slotId, frame: frame)
         splashAdView.frame = CGRect(x: 0, y: 0, width: frame.width, height: frame.height)
-        let vc = AppUtil.getVC()
+        let vc = currentViewController!
         splashAdView.rootViewController = vc
         if tolerateTimeout != nil {
             splashAdView.tolerateTimeout = tolerateTimeout!

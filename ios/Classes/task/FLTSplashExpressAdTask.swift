@@ -24,7 +24,7 @@ internal final class FLTSplashExpressAdTask: FLTTaskProtocol {
         let width = expressArgs["width"]!
         let height = expressArgs["height"]!
         let adSize = CGSize(width: width, height: height)
-        let vc = AppUtil.getVC()
+        let vc = currentViewController!
         let splashView = BUNativeExpressSplashView(slotID: slotId, adSize: adSize, rootViewController: vc)
         if tolerateTimeout != nil {
             splashView.tolerateTimeout = tolerateTimeout!

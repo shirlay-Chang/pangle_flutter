@@ -15,19 +15,20 @@ Flutter plugin for Pangle Ad SDK.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '9.0'
+  s.platform = :ios, '10.0'
 
   s.static_framework = true
+  s.dependency 'PangleAd'
 
-  s.default_subspec   = 'cn'
+  # s.default_subspec   = 'cn'
 
-  s.subspec 'cn' do |ss|
-    ss.ios.dependency 'Ads-CN', '~> 3.4'
-  end
+  # s.subspec 'cn' do |ss|
+  #   ss.ios.dependency 'Ads-CN', '~> 3.4'
+  # end
 
-  s.subspec 'global' do |ss|
-    ss.ios.dependency 'Ads-Global', '~> 3.4'
-  end
+  # s.subspec 'global' do |ss|
+  #   ss.ios.dependency 'Ads-Global', '~> 3.4'
+  # end
 
 
   # Flutter.framework does not contain a i386 slice. Only x86_64 simulators are supported.

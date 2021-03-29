@@ -1,5 +1,6 @@
 import UIKit
 import Flutter
+import pangle_flutter
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
@@ -7,7 +8,7 @@ import Flutter
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    FlutterBridge.register(with: registrar(forPlugin: "PangleFlutterPlugin")!)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

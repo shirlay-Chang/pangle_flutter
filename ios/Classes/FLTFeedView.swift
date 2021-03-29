@@ -169,7 +169,7 @@ class FeedView: UIView {
         guard let expressAd: BUNativeExpressAdView = ad else {
             return
         }
-        expressAd.rootViewController = AppUtil.getVC()
+        expressAd.rootViewController = currentViewController!
         expressAd.extraChannel = methodChannel
 
         addSubview(expressAd)

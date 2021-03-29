@@ -39,7 +39,7 @@ internal final class NativeExpressRewardAdTask: NSObject, BUNativeExpressRewarde
         if preload {
             self.callback(.success(false))
         } else {
-            let vc = AppUtil.getVC()
+            let vc = currentViewController!
             rewardedVideoAd.show(fromRootViewController: vc)
         }
     }
@@ -86,7 +86,7 @@ internal final class NativeExpressRewardAdTask: NSObject, BUNativeExpressRewarde
     
     func showAd(_ callback: @escaping (Result<Bool, Error>) -> Void) {
         self.callback = callback
-        let vc = AppUtil.getVC()
+        let vc = currentViewController!
         self.ad.show(fromRootViewController: vc)
     }
     
