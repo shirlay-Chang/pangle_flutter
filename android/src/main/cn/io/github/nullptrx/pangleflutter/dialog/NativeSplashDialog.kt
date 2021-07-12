@@ -23,6 +23,11 @@ class NativeSplashDialog : DialogFragment() {
     ctx = context
   }
 
+  override fun onAttach(activity: Activity) {
+    super.onAttach(activity)
+    ctx = activity
+  }
+
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     return DialogUtil.createDialog(ctx)
   }
