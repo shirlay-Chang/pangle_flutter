@@ -39,7 +39,9 @@ class AndroidSplashView implements SplashViewPlatform {
     SplashViewPlatformCreatedCallback? onSplashViewPlatformCreated,
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   }) {
-    return PlatformViewLink(
+    return WillPopScope(
+      onWillPop: () async=>false,
+      child: PlatformViewLink(
         viewType: kSplashViewType,
         surfaceFactory: (
           BuildContext context,
@@ -71,6 +73,7 @@ class AndroidSplashView implements SplashViewPlatform {
               ));
             })
             ..create();
-        });
+        })
+    );
   }
 }
