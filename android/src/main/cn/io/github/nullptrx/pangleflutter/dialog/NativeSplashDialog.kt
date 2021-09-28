@@ -30,6 +30,9 @@ class NativeSplashDialog : DialogFragment() {
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    // DialogFragment禁止按Back键退出
+    // 注意监听key事件无效
+     isCancelable = false
     return DialogUtil.createDialog(ctx)
   }
 
